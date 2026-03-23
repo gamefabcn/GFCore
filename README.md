@@ -16,6 +16,40 @@ ue5.7.4 以上使用。
 		}
    ```
 2. 项目XXX.Target.cs
-<img width="950" height="631" alt="image" src="https://github.com/user-attachments/assets/55d0b7b9-b8ed-4b2a-983b-3cbc1b48e715" />
+```
+public class XXXTarget : TargetRules
+{
+	public XXXTarget(TargetInfo Target) : base(Target)
+	{
+		Type = TargetType.Game;
+		DefaultBuildSettings = BuildSettingsVersion.V6;
+		IncludeOrderVersion = EngineIncludeOrderVersion.Unreal5_7;
+		ExtraModuleNames.Add("XXX");
+		RegisterModulesCreatedByRider(); // 重点
+	}
+	private void RegisterModulesCreatedByRider()
+	{
+		ExtraModuleNames.AddRange(new string[] { "GFRuntime" });
+	}
+}
+```
 3. 设置XXXEditor.Target.cs
-   <img width="995" height="645" alt="image" src="https://github.com/user-attachments/assets/668a199b-6eff-45d2-a017-ce0b041e544a" />
+```
+public class XXXEditorTarget : TargetRules
+{
+	public XXXEditorTarget( TargetInfo Target) : base(Target)
+	{
+		Type = TargetType.Editor;
+		DefaultBuildSettings = BuildSettingsVersion.V6;
+		IncludeOrderVersion = EngineIncludeOrderVersion.Unreal5_7;
+		ExtraModuleNames.Add("XXX");
+		RegisterModulesCreatedByRider();
+	}
+
+	private void RegisterModulesCreatedByRider()
+	{
+		ExtraModuleNames.AddRange(new string[] { "GFRuntime", "GFEditor" });
+	}
+}
+
+```
