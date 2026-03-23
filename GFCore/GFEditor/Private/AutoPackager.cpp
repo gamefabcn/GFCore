@@ -95,18 +95,40 @@ void FAutoPackager::OnCleanButtonClicked()
 	FSlateNotificationManager::Get().AddNotification(Info)->SetCompletionState(SNotificationItem::CS_Success);
 }
 
-// --- 打包逻辑 (保持原有逻辑并确保线程安全) ---
+// --- 打包逻辑
 void FAutoPackager::OnPackageButtonClicked()
 {
-	FString ProjectPath = FPaths::GetProjectFilePath();
-	FString ArchiveDir = FPaths::ConvertRelativePathToFull(FPaths::ProjectDir() / TEXT("Release/Builds"));
+	// 1. 获取原始路径（可能相对）
+	FString RawProjectPath = FPaths::GetProjectFilePath();
+	UE_LOG(LogTemp, Warning, TEXT("[AutoPackager] 原始路径: %s"), *RawProjectPath);
 
+	// 2. 强制转为绝对路径（关键修复！）
+	FString ProjectPath = FPaths::ConvertRelativePathToFull(RawProjectPath);
+	UE_LOG(LogTemp, Warning, TEXT("[AutoPackager] 绝对路径: %s"), *ProjectPath);
+
+	if (ProjectPath.IsEmpty() || !FPaths::FileExists(ProjectPath))
+	{
+		UE_LOG(LogTemp, Error, TEXT("[AutoPackager] 项目文件不存在！路径无效"));
+		return;
+	}
+
+	// 3. 打包输出目录
+	FString ArchiveDir = FPaths::ConvertRelativePathToFull(FPaths::ProjectDir() / TEXT("Release/Builds"));
+	UE_LOG(LogTemp, Warning, TEXT("[AutoPackager] 输出目录: %s"), *ArchiveDir);
+
+	// 4. 构建 UAT 命令行（使用绝对路径）
 	FString CommandLine = FString::Printf(
 		TEXT("BuildCookRun -project=\"%s\" -noP4 -clientconfig=Shipping -serverconfig=Shipping -nocompile -nocompileeditor -installed -utf8output -platform=Win64 -build -cook -stage -archive -archivedirectory=\"%s\""),
 		*ProjectPath, *ArchiveDir);
 
+	UE_LOG(LogTemp, Warning, TEXT("[AutoPackager] 完整 UAT 命令:\n%s"), *CommandLine);
+
+	// 5. 执行 UAT
 	IUATHelperModule::Get().CreateUatTask(
-		CommandLine, LOCTEXT("Win64", "Windows"), LOCTEXT("PackTask", "Packaging"), LOCTEXT("PackShort", "Pack"),
+		CommandLine,
+		LOCTEXT("Win64", "Windows"),
+		LOCTEXT("PackTask", "Packaging"),
+		LOCTEXT("PackShort", "Pack"),
 		nullptr, nullptr,
 		[this, ArchiveDir](FString Result, double Time)
 		{
