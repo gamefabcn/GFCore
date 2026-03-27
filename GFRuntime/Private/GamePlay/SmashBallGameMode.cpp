@@ -16,7 +16,7 @@ void ASmashBallGameMode::BeginPlay()
 	{
 		if (ASmashBallPlayerController* MyPC = Cast<ASmashBallPlayerController>(PC))
 		{
-			MyPC->SetGameMouseMode();
+			//MyPC->SetGameMouseMode();
 		}
 	}
 }
